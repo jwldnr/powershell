@@ -26,61 +26,45 @@ Write-Host -ForegroundColor DarkRed "Loading GitHub.."
 . (Resolve-Path "$env:LOCALAPPDATA\GitHub\shell.ps1")
 . $env:github_posh_git\profile.example.ps1
 
+Write-Host -ForegroundColor DarkRed "Adding gulp powershell completion.."
+Invoke-Expression ((gulp --completion=powershell) -join [System.Environment]::NewLine)
+
+Write-Host -ForegroundColor DarkRed "Overriding powershell prompt.."
+
+# variables
+$user = [Environment]::UserName
+$computer = [Environment]::MachineName
+
 if (test-path env:github_posh_git) {
     $DefaultTitle = $Host.UI.RawUI.WindowTitle
-    $GitPromptSettings.BeforeText = 'on '
+    $GitPromptSettings.BeforeText = "on "
     $GitPromptSettings.BeforeForegroundColor = [ConsoleColor]::White
-    $GitPromptSettings.AfterText = ''
-    # $GitPromptSettings.BranchIdenticalStatusToForegroundColor = [ConsoleColor]::Yellow
+    $GitPromptSettings.AfterText = ""
+    $GitPromptSettings.BranchIdenticalStatusToForegroundColor = [ConsoleColor]::Yellow
 
     function prompt {
-        # get info
-        $user = [Environment]::UserName
-        $computer = "undefined"
         $location = $executionContext.SessionState.Path.CurrentLocation
-
-        # accept everything up until "-"
-        $match = [Environment]::MachineName -match "^.*?(?=-)"
-        if ($match) {
-          $computer = $matches[0]
-        }
-
         $location = $location -replace "C:\\Users\\$user", "~"
 
-        # path is not a git directory
+        Write-Host "$user " -ForegroundColor DarkCyan -NoNewline
+        Write-Host "at " -NoNewline
+        Write-Host "$computer " -ForegroundColor Red -NoNewline
+        Write-Host "in " -NoNewline
+        Write-Host "$location " -ForegroundColor DarkBlue -NoNewline
+
         if (-not(Get-GitDirectory)) {
-            # set window title
             $Host.UI.RawUI.WindowTitle = $DefaultTitle
-
-            Write-Host "$user " -ForegroundColor DarkCyan -NoNewline
-            Write-Host "at " -NoNewline
-            Write-Host "$computer " -ForegroundColor Red -NoNewline
-            Write-Host "in " -NoNewline
-            Write-Host "$location " -ForegroundColor DarkBlue -NoNewline
-
-            return "`n$('$' * ($nestedPromptLevel + 1)) "
         }
         else {
-            $realLASTEXITCODE = $LASTEXITCODE
-
-            Write-Host "$user " -ForegroundColor DarkCyan -NoNewline
-            Write-Host "at " -NoNewline
-            Write-Host "$computer " -ForegroundColor Red -NoNewline
-            Write-Host "in " -NoNewline
-            Write-Host "$location " -ForegroundColor DarkBlue -NoNewline
-
             Write-VcsStatus
-
-            $LASTEXITCODE = $realLASTEXITCODE
-            return "`n$('$' * ($nestedPromptLevel + 1)) "
         }
+
+        return "`n$('$' * ($nestedPromptLevel + 1)) "
     }
 }
 else {
-    Write-Warning -Message 'Unable to load the Posh-Git PowerShell Module'
+    Write-Warning -Message "Unable to load the Posh-Git PowerShell Module"
 }
-
-Invoke-Expression ((gulp --completion=powershell) -join [System.Environment]::NewLine)
 
 # Finish loading message
 Write-Host -ForegroundColor DarkGreen "Done"
