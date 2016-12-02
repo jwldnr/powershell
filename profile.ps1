@@ -1,8 +1,4 @@
-# environment loading message
-Write-Host -ForegroundColor DarkGreen "Setup PowerShell Environment.."
-
-# output the current colors
-Write-Host -nonewline -ForegroundColor DarkRed "Colors: "
+# output colors
 Write-Host -nonewline -ForegroundColor Black       "Black       " -BackgroundColor Black
 Write-Host -nonewline -ForegroundColor DarkBlue    "DarkBlue    " -BackgroundColor Black
 Write-Host -nonewline -ForegroundColor DarkGreen   "DarkGreen   " -BackgroundColor Black
@@ -11,7 +7,6 @@ Write-Host -nonewline -ForegroundColor DarkRed     "DarkRed     " -BackgroundCol
 Write-Host -nonewline -ForegroundColor DarkMagenta "DarkMagenta " -BackgroundColor Black
 Write-Host -nonewline -ForegroundColor DarkYellow  "DarkYellow  " -BackgroundColor Black
 Write-Host -ForegroundColor Gray                   "Gray        " -BackgroundColor Black
-Write-Host -nonewline -ForegroundColor DarkRed "Colors: "
 Write-Host -nonewline -ForegroundColor DarkGray    "DarkGray    " -BackgroundColor Black
 Write-Host -nonewline -ForegroundColor Blue        "Blue        " -BackgroundColor Black
 Write-Host -nonewline -ForegroundColor Green       "Green       " -BackgroundColor Black
@@ -21,22 +16,33 @@ Write-Host -nonewline -ForegroundColor Magenta     "Magenta     " -BackgroundCol
 Write-Host -nonewline -ForegroundColor Yellow      "Yellow      " -BackgroundColor Black
 Write-Host -ForegroundColor White                  "White       " -BackgroundColor Black
 
-# github for windows
-Write-Host -ForegroundColor DarkRed "Loading GitHub.."
-. (Resolve-Path "$env:LOCALAPPDATA\GitHub\shell.ps1")
-. $env:github_posh_git\profile.example.ps1
+# environment loading message
+Write-Host -ForegroundColor DarkGreen "Setting up PowerShell Environment.."
 
-Write-Host -ForegroundColor DarkRed "Adding gulp powershell completion.."
-Invoke-Expression ((gulp --completion=powershell) -join [System.Environment]::NewLine)
-
-Write-Host -ForegroundColor DarkRed "Overriding powershell prompt.."
-
-# variables
 $user = [Environment]::UserName
 $computer = [Environment]::MachineName
+$DefaultTitle = $Host.UI.RawUI.WindowTitle
 
-if (test-path env:github_posh_git) {
-    $DefaultTitle = $Host.UI.RawUI.WindowTitle
+# github for windows
+Write-Host -ForegroundColor DarkRed "Loading GitHub.."
+$gitHubShellPath = (Resolve-Path "$env:LOCALAPPDATA\GitHub\shell.ps1")
+if (Test-Path $gitHubShellPath) {
+    . $gitHubShellPath
+} else {
+    Write-Host "Could not resolve GitHub shell path. Is GitHub installed?"
+}
+
+Write-Host -ForegroundColor DarkRed "Adding gulp powershell completion.."
+if (Get-Command "gulp") {
+    Invoke-Expression ((gulp --completion=powershell) -join [System.Environment]::NewLine)
+} else {
+    Write-Host "Unable to add gulp powershell completion: Command 'gulp' not found."
+}
+
+Write-Host -ForegroundColor DarkRed "Overriding powershell prompt.."
+if (Test-Path env:github_posh_git) {
+    . $env:github_posh_git\profile.example.ps1
+
     $GitPromptSettings.BeforeText = "on "
     $GitPromptSettings.BeforeForegroundColor = [ConsoleColor]::White
     $GitPromptSettings.AfterText = ""
@@ -54,17 +60,15 @@ if (test-path env:github_posh_git) {
 
         if (-not(Get-GitDirectory)) {
             $Host.UI.RawUI.WindowTitle = $DefaultTitle
-        }
-        else {
+        } else {
             Write-VcsStatus
         }
 
         return "`n$('$' * ($nestedPromptLevel + 1)) "
     }
-}
-else {
-    Write-Warning -Message "Unable to load the Posh-Git PowerShell Module"
+} else {
+    Write-Warning -Message "Unable to load the Posh-Git PowerShell Module."
 }
 
 # Finish loading message
-Write-Host -ForegroundColor DarkGreen "Done"
+Write-Host -ForegroundColor DarkGreen "Done."
