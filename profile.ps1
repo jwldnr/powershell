@@ -23,25 +23,11 @@ $user = [Environment]::UserName
 $computer = [Environment]::MachineName
 $DefaultTitle = $Host.UI.RawUI.WindowTitle
 
-# github for windows
-Write-Host -ForegroundColor DarkRed "Loading GitHub.."
-$gitHubShellPath = (Resolve-Path "$env:LOCALAPPDATA\GitHub\shell.ps1")
-if (Test-Path $gitHubShellPath) {
-    . $gitHubShellPath
-} else {
-    Write-Host "Could not resolve GitHub shell path. Is GitHub installed?"
-}
-
-Write-Host -ForegroundColor DarkRed "Adding gulp powershell completion.."
-if (Get-Command "gulp") {
-    Invoke-Expression ((gulp --completion=powershell) -join [System.Environment]::NewLine)
-} else {
-    Write-Host "Unable to add gulp powershell completion: Command 'gulp' not found."
-}
-
-Write-Host -ForegroundColor DarkRed "Overriding powershell prompt.."
-if (Test-Path env:github_posh_git) {
-    . $env:github_posh_git\profile.example.ps1
+# posh-git
+Write-Host -ForegroundColor DarkRed "Loading Posh-Git PowerShell Module.."
+$poshGitModule = Get-Module posh-git -ListAvailable | Sort-Object Version -Descending | Select-Object -First 1
+if ($poshGitModule) {
+    $poshGitModule | Import-Module
 
     $GitPromptSettings.BeforeText = "on "
     $GitPromptSettings.BeforeForegroundColor = [ConsoleColor]::White
@@ -66,9 +52,21 @@ if (Test-Path env:github_posh_git) {
 
         return "`n$('$' * ($nestedPromptLevel + 1)) "
     }
+
+    Write-Host -ForegroundColor DarkGreen "OK"
 } else {
-    Write-Warning -Message "Unable to load the Posh-Git PowerShell Module."
+    Write-Host "Could not find posh-git module. Is posh-git installed?"
+    Write-Host "If you are on PowerShell version 5 or higher, execute the command below to install from the PowerShell Gallery:"
+    Write-Host "'PowerShellGet\Install-Module posh-git -Scope CurrentUser'"
+
+    throw
 }
 
-# Finish loading message
-Write-Host -ForegroundColor DarkGreen "Done."
+# gulp
+Write-Host -ForegroundColor DarkRed "Adding gulp powershell completion.."
+if (Get-Command "gulp") {
+    Invoke-Expression ((gulp --completion=powershell) -join [System.Environment]::NewLine)
+    Write-Host -ForegroundColor DarkGreen "OK"
+} else {
+    Write-Host "Unable to add gulp powershell completion: Command 'gulp' not found."
+}
