@@ -52,21 +52,6 @@ function prompt {
   return "`n$('$' * ($nestedPromptLevel + 1)) "
 }
 
-# gulp
-Write-Host -ForegroundColor DarkYellow "Adding gulp powershell completion.."
-  if (Get-Command "gulp" -ErrorAction SilentlyContinue) {
-    Invoke-Expression -Command "gulp --completion=powershell" | Out-Null
-    Write-Host -ForegroundColor DarkCyan "OK"
-  } else {
-  if (Get-Command "npm" -ErrorAction SilentlyContinue) {
-    Write-Host -ForegroundColor DarkGreen "'gulp-cli' not found. Installing.."
-    Invoke-Expression -Command "npm install --global gulp-cli" | Out-Null
-    Write-Host -ForegroundColor DarkCyan "OK"
-  } else {
-    Write-Host "You need to install node.js in order to add gulp powershell completion."
-  }
-}
-
 # posh-git
 Write-Host -ForegroundColor DarkYellow "Loading posh-git powershell module.."
 $poshGitModule = Invoke-Expression $getPoshGitModule
